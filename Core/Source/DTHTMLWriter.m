@@ -878,7 +878,7 @@
 			if (needsSpanTag)
 			{
 				// span end tag
-				[retString appendFormat:@"</%@>", spanTagName];
+				[retString appendFormat:@" </%@>", spanTagName];
 			}
 			
 			if (isLastPartOfHyperlink)
@@ -915,7 +915,7 @@
 		else
 		{
 			// other blocks are always closed
-			[retString appendFormat:@"</%@>\n", blockElement];
+			[retString appendFormat:@" </%@>\n", blockElement];
 		}
 		
 		previousListStyles = [currentListStyles copy];
@@ -1013,7 +1013,7 @@
 			NSArray *matches = [detect matchesInString:part options:0 range:NSMakeRange(0, [part length])];
 			for(NSTextCheckingResult *result in matches){
 				NSString* url = [part substringWithRange: result.range];
-				part = [part stringByReplacingCharactersInRange: result.range withString: [ NSString stringWithFormat: @"<a href='%@'>%@</a>", url, url]];
+				part = [part stringByReplacingCharactersInRange: result.range withString: [ NSString stringWithFormat: @"<a href='%@'>%@</a>", result.URL, url]];
 			}
 			[result appendString: part];
 			NSString *link = [self getAnchorTag: scanner];
