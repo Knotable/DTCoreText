@@ -878,7 +878,7 @@
 			if (needsSpanTag)
 			{
 				// span end tag
-				[retString appendFormat:@"</%@>", spanTagName];
+				[retString appendFormat:@" </%@>", spanTagName];
 			}
 			
 			if (isLastPartOfHyperlink)
@@ -915,7 +915,7 @@
 		else
 		{
 			// other blocks are always closed
-			[retString appendFormat:@"</%@>\n", blockElement];
+			[retString appendFormat:@" </%@>\n", blockElement];
 		}
 		
 		previousListStyles = [currentListStyles copy];
@@ -1006,17 +1006,42 @@
 	
     if(fragment){
         NSDataDetector *detect = [[NSDataDetector alloc] initWithTypes:NSTextCheckingTypeLink error:nil];
-        NSArray *matches = [detect matchesInString:output options:0 range:NSMakeRange(0, [output length])];
-        NSEnumerator* enumerator=[matches reverseObjectEnumerator];
-        
-        for(NSTextCheckingResult* result in enumerator){
-            NSString* url = [output substringWithRange:result.range];
-            output=[output stringByReplacingCharactersInRange:result.range withString:[NSString stringWithFormat:@"<a href='%@'>%@</a>",url,url]];
-        }
+		NSScanner *scanner = [NSScanner scannerWithString: output];
+		NSMutableString *result = [[NSMutableString alloc] init];
+		while (![scanner isAtEnd]) {
+			NSString *part = [self getTextBeforeAnchorTag: scanner];
+			NSArray *matches = [detect matchesInString:part options:0 range:NSMakeRange(0, [part length])];
+			for(NSTextCheckingResult *result in matches){
+				NSString* url = [part substringWithRange: result.range];
+				part = [part stringByReplacingCharactersInRange: result.range withString: [ NSString stringWithFormat: @"<a href='%@'>%@</a>", result.URL, url]];
+			}
+			[result appendString: part];
+			NSString *link = [self getAnchorTag: scanner];
+			[result appendString: link];
+		}
+		output = result;
     }
-    
 	_HTMLString = output;
 }
+
+- (NSString *) getTextBeforeAnchorTag: (NSScanner *) scanner
+{
+	NSString *text = @"";
+	[scanner scanUpToString: @"<a" intoString: &text];
+	return text;
+}
+
+- (NSString *) getAnchorTag: (NSScanner *) scanner {
+	
+	NSString *text = @"";
+	[scanner scanUpToString: @"</a>" intoString: &text];
+	if ([scanner isAtEnd]){
+		return @"";
+	}
+	[scanner setScanLocation: [scanner scanLocation] + 4];
+	return [text stringByAppendingString: @"</a>"];
+}
+
 
 #pragma mark - Public
 
